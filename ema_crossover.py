@@ -1,5 +1,5 @@
 """
-po3_engine.py
+ema_crossover.py
 ─────────────
 EMA Crossover Strategy Engine.
 
@@ -8,12 +8,9 @@ Responsibilities:
   - Generate BUY / SELL / HOLD signals from last closed candle
   - Expose set_parameters() for live parameter updates
 
-The name po3_engine reflects the Power-of-3 (PO3) candle structure
-awareness — signals are always read from the last *closed* candle
-(index -2), never the live candle, to avoid repainting.
 
 Usage:
-    from po3_engine import StrategyEngine
+    from ema_crossover import StrategyEngine
     engine = StrategyEngine(connector)
     signal = engine.get_signal()          # "BUY" | "SELL" | "HOLD"
 """
