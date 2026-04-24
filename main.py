@@ -8,7 +8,7 @@ Wires all modules together and runs the main trading loop:
     config.py              ← all settings
     logger.py              ← logging setup
     mt5_connector.py       ← MT5 session + data
-    po3_engine.py          ← EMA signal generation
+    ema_crossover.py ← EMA signal generation
     risk_manager.py        ← lot sizing, SL/TP, drawdown guard
     trade_manager.py       ← order execution + position management
     performance_metrics.py ← Sharpe, Sortino, Calmar etc.
@@ -26,7 +26,7 @@ import schedule
 import config
 from logger          import log
 from mt5_connector   import MT5Connector
-from po3_engine      import StrategyEngine
+from ema_crossover      import StrategyEngine
 from risk_manager    import RiskManager
 from trade_manager   import TradeManager
 from backtest        import EMABacktester
