@@ -1,3 +1,7 @@
 .env
 myREADME.md
 README2.md
+bot.log
+__pycache__
+.venv
+config2.py
