@@ -156,9 +156,31 @@ class TelegramNotifier:
             f"Use /start for the control panel."
         )
 
+    # ── Helpers ───────────────────────────────────────────────────
+
+    @staticmethod
+    def _get_message(update: Update):
+        """
+        Safely extract the message object from an Update regardless of
+        whether the update came from a slash command or an inline button press.
+
+        Slash command  → update.message        (not None)
+        Inline button  → update.callback_query.message  (update.message is None)
+        """
+        if update.message is not None:
+            return update.message
+        if update.callback_query is not None:
+            return update.callback_query.message
+        return None
+
     # ── Command Handlers ──────────────────────────────────────────
+    # Every handler resolves its reply target via _get_message() so
+    # it works identically whether triggered by /command or a button.
 
     async def _cmd_start(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+        message = self._get_message(update)
+        if message is None:
+            return
         kb = [
             [InlineKeyboardButton("▶️ Start Bot",   callback_data="start_bot"),
              InlineKeyboardButton("⏹ Stop Bot",    callback_data="stop_bot")],
@@ -169,13 +191,16 @@ class TelegramNotifier:
             [InlineKeyboardButton("📋 Open Trades", callback_data="trades"),
              InlineKeyboardButton("⚙️ Settings",    callback_data="settings")],
         ]
-        await update.message.reply_text(
+        await message.reply_text(
             "🤖 *EMA CrossOver Bot*\nChoose an action:",
             reply_markup=InlineKeyboardMarkup(kb),
             parse_mode="Markdown",
         )
 
     async def _cmd_status(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+        message = self._get_message(update)
+        if message is None:
+            return
         acct   = self.connector.get_account_info()
         status = "🟢 Running" if self.bot_state.get("running") else "🔴 Stopped"
         msg = (
@@ -188,9 +213,12 @@ class TelegramNotifier:
             f"Trades today: `{self.bot_state.get('trades_today', 0)}`\n"
             f"Total PnL:    `${self.bot_state.get('total_pnl', 0):.2f}`"
         )
-        await update.message.reply_text(msg, parse_mode="Markdown")
+        await message.reply_text(msg, parse_mode="Markdown")
 
     async def _cmd_balance(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+        message = self._get_message(update)
+        if message is None:
+            return
         acct = self.connector.get_account_info()
         msg = (
             f"💰 *ACCOUNT*\n"
@@ -201,21 +229,27 @@ class TelegramNotifier:
             f"Margin Level: `{acct.get('margin_level',  0):.1f}%`\n"
             f"Leverage:     `1:{acct.get('leverage', 0)}`"
         )
-        await update.message.reply_text(msg, parse_mode="Markdown")
+        await message.reply_text(msg, parse_mode="Markdown")
 
     async def _cmd_signal(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+        message = self._get_message(update)
+        if message is None:
+            return
         sig   = self.engine.get_signal()
         emoji = {"BUY": "🟢", "SELL": "🔴", "HOLD": "⚪"}.get(sig, "⚪")
-        await update.message.reply_text(
+        await message.reply_text(
             f"{emoji} *Current Signal*: `{sig}`\n"
             f"Symbol: `{config.SYMBOL}` | EMA `{config.EMA_SHORT}/{config.EMA_LONG}`",
             parse_mode="Markdown",
         )
 
     async def _cmd_trades(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+        message = self._get_message(update)
+        if message is None:
+            return
         pos = self.trade_manager.get_open_position()
         if pos is None:
-            await update.message.reply_text("📋 No open positions.")
+            await message.reply_text("📋 No open positions.")
             return
         direction = "BUY" if pos.type == 0 else "SELL"
         msg = (
@@ -227,19 +261,25 @@ class TelegramNotifier:
             f"SL: `{pos.sl:.5f}` | TP: `{pos.tp:.5f}`\n"
             f"Current P&L: `${pos.profit:.2f}`"
         )
-        await update.message.reply_text(msg, parse_mode="Markdown")
+        await message.reply_text(msg, parse_mode="Markdown")
 
     async def _cmd_backtest(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text("⏳ Running backtest, please wait…")
+        message = self._get_message(update)
+        if message is None:
+            return
+        await message.reply_text("⏳ Running backtest, please wait…")
         try:
             self.backtester.run()
             report = self.backtester.telegram_report()
-            await update.message.reply_text(report, parse_mode="Markdown")
+            await message.reply_text(report, parse_mode="Markdown")
         except Exception as e:
-            await update.message.reply_text(f"❌ Backtest error: {e}")
+            await message.reply_text(f"❌ Backtest error: {e}")
 
     async def _cmd_optimize(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text("⏳ Optimising EMA parameters… (30–60 seconds)")
+        message = self._get_message(update)
+        if message is None:
+            return
+        await message.reply_text("⏳ Optimising EMA parameters… (30–60 seconds)")
         try:
             opt, perf = self.backtester.optimise()
             msg = (
@@ -248,11 +288,14 @@ class TelegramNotifier:
                 f"Performance: `{perf:.4f}x`\n"
                 f"Config updated — bot will use new params."
             )
-            await update.message.reply_text(msg, parse_mode="Markdown")
+            await message.reply_text(msg, parse_mode="Markdown")
         except Exception as e:
-            await update.message.reply_text(f"❌ Optimise error: {e}")
+            await message.reply_text(f"❌ Optimise error: {e}")
 
     async def _cmd_settings(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+        message = self._get_message(update)
+        if message is None:
+            return
         msg = (
             f"⚙️ *CURRENT SETTINGS*\n"
             f"Symbol:       `{config.SYMBOL}`\n"
@@ -268,22 +311,22 @@ class TelegramNotifier:
             f"Trail pips:   `{config.TRAIL_PIPS}`\n"
             f"Scan interval:`{config.CHECK_INTERVAL_SEC}s`"
         )
-        await update.message.reply_text(msg, parse_mode="Markdown")
+        await message.reply_text(msg, parse_mode="Markdown")
 
     # ── Inline Button Handler ─────────────────────────────────────
 
     async def _button_handler(self, update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
-        data           = query.data
-        update.message = query.message   # route to same message for reply
+        data    = query.data
+        message = query.message   # always use query.message — never mutate update
 
         if data == "start_bot":
             self.bot_state["running"] = True
-            await query.message.reply_text("✅ Bot *started*.", parse_mode="Markdown")
+            await message.reply_text("✅ Bot *started*.", parse_mode="Markdown")
         elif data == "stop_bot":
             self.bot_state["running"] = False
-            await query.message.reply_text("⏹ Bot *stopped*.", parse_mode="Markdown")
+            await message.reply_text("⏹ Bot *stopped*.", parse_mode="Markdown")
         elif data == "status":   await self._cmd_status(update, ctx)
         elif data == "balance":  await self._cmd_balance(update, ctx)
         elif data == "backtest": await self._cmd_backtest(update, ctx)
