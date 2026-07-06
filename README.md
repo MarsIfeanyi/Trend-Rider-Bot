@@ -1,5 +1,6 @@
 # Riding the Trend Momentum Trading Bot 
-Momentum based trading bot that rides the trend using Exponential Moving Average Crossover
+Momentum based trading bot that rides the trend using Exponential Moving Average Crossover.
+This bot is built with [Python](https://www.python.org/) as the native language has and [MT5](https://www.metatrader5.com/en) Integrations for real time streaming of market data and trade executions.
 
 **Core functionalities of the Bot:**
 
@@ -23,10 +24,10 @@ No crossover detected on last closed candle      →  HOLD  ⚪
 
 The signal is always read from the **last closed candle** — never the live open candle — to prevent repainting and false entries.
 
----
 
-Forward Testing and Trade Results
-started forward testing the trading bot with $5000 and the account has grown to $6483.35 
+
+## Forward Testing and Trade Results
+Started forward testing the trading bot with $5000 and the account has grown to $6483.35, that's 129.67% profit from the initial capital 
 
 ![01](./images/TradStats1.png)
 ![02](./images/TradStats2.png)
@@ -42,3 +43,4 @@ started forward testing the trading bot with $5000 and the account has grown to 
 
 
 
+---
