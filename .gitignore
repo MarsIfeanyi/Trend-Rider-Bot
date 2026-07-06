@@ -5,3 +5,4 @@ bot.log
 __pycache__
 .venv
 config2.py
+.ipynb_checkpoints
