@@ -4,7 +4,7 @@ backtest.py
 Vectorised EMA crossover backtester and parameter optimiser.
 
 Depends on:
-  - po3_engine.StrategyEngine   — data prep and EMA computation
+  - ema_crossover.StrategyEngine   — data prep and EMA computation
   - performance_metrics         — all metric calculations
 
 Usage:
